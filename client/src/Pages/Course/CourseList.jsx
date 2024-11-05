@@ -7,15 +7,11 @@ import Layout from "../../Layout/Layout";
 export default function CourseList() {
   const dispatch = useDispatch();
 
-  const { coursesData } = useSelector((state) => state.course);
-
-  async function fetchCourses() {
-    await dispatch(getAllCourses());
-  }
+  const { coursesData, loading, error } = useSelector((state) => state.course);
 
   useEffect(() => {
-    fetchCourses();
-  }, []);
+    dispatch(getAllCourses()); // Dispatch the getAllCourses action to fetch courses
+  }, [dispatch]);
 
   return (
     <Layout>
@@ -26,7 +22,13 @@ export default function CourseList() {
             Industry experts
           </span>
         </h1>
-        {/* course container */}
+        {/* Loading State */}
+        {loading && <p>Loading...</p>}
+
+        {/* Error State */}
+        {error && <p className="text-red-600">Error: {error}</p>}
+
+        {/* Course container */}
         <div className="flex gap-12 md:justify-start justify-center flex-wrap">
           {coursesData?.map((element) => {
             return <CourseCard key={element._id} data={element} />;
