@@ -6,35 +6,50 @@ const isLoggedIn = async (req, res, next) => {
     const { token } = req.cookies;
 
     if (!token) {
-        return next(new AppError("Unauthenticated, please login again", 400))
+        return next(new AppError("Unauthenticated, please login again", 400));
     }
 
-    const userDetails = await jwt.verify(token, process.env.JWT_SECRET);
-    req.user = userDetails;
-
-    next();
+    try {
+        const userDetails = await jwt.verify(token, process.env.JWT_SECRET);
+        req.user = userDetails;
+        next();
+    } catch (error) {
+        return next(new AppError("Invalid or expired token, please login again", 401));
+    }
 }
 
-// authorised roles
+// Authorized roles middleware
 const authorisedRoles = (...roles) => async (req, res, next) => {
-    const currentUserRoles = req.user.role;
-    if (!roles.includes(currentUserRoles)) {
-        return next(new AppError("You do not have permission to access this routes", 403))
+    if (!req.user || !req.user.role) {
+        return next(new AppError("Role not found in user data", 403));
+    }
+
+    const currentUserRole = req.user.role;
+    if (!roles.includes(currentUserRole)) {
+        return next(new AppError("You do not have permission to access this route", 403));
     }
     next();
 }
 
+// Authorize subscriber middleware
 const authorizeSubscriber = async (req, res, next) => {
-    const {role, id} = req.user; 
-    const user = await userModel.findById(id);
-    const subscriptionStatus = user.subscription.status;
-    if (role !== 'ADMIN' && subscriptionStatus !== 'active') {
-        return next(
-            new AppError('Please subscribce to access this route!', 403)
-        )
-    }
+    const { role, id } = req.user;
 
-    next();
+    try {
+        const user = await userModel.findById(id);
+        if (!user) {
+            return next(new AppError("User not found", 404));
+        }
+
+        const subscriptionStatus = user.subscription?.status;
+        if (role !== 'ADMIN' && subscriptionStatus !== 'active') {
+            return next(new AppError("Please subscribe to access this route!", 403));
+        }
+        
+        next();
+    } catch (error) {
+        return next(new AppError("Error verifying subscription status", 500));
+    }
 }
 
 export {
