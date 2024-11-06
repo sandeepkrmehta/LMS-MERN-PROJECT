@@ -20,6 +20,9 @@ app.use(cookieParser());
 app.use(morgan('dev'));
 app.use(cors({ origin: [process.env.CLIENT_URL], credentials: true }));
 
+app.get('/', (req, res) => {
+    res.send('Welcome to My Blog API');
+});
 
 app.use('/api/v1/user', userRoutes); 
 app.use('/api/v1/courses', courseRoutes); 
