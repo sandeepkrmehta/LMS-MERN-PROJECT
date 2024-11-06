@@ -58,6 +58,8 @@ userSchema.pre('save', async function (next) {
     return next();
 });
 
+// JWT Token Generation
+
 userSchema.methods = {
     generateJWTToken: function () {
         return jwt.sign(
