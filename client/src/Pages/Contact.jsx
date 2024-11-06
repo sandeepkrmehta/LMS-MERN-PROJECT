@@ -16,10 +16,10 @@ export default function Contact() {
 
   function handleInputChange(e) {
     const { name, value } = e.target;
-    setUserInput({
-      ...userInput,
+    setUserInput((prevState) => ({
+      ...prevState,
       [name]: value,
-    });
+    }));
   }
 
   async function onFormSubmit(e) {
@@ -35,17 +35,18 @@ export default function Contact() {
     }
 
     setIsLoading(true);
-    const loadingMessage = toast.loading("sending message...");
+    const loadingMessage = toast.loading("Sending message...");
     try {
       const res = await axiosInstance.post("/contact", userInput);
-      toast.success(res?.data?.message, { id: loadingMessage });
+      toast.success(res?.data?.message || "Message sent successfully", { id: loadingMessage });
       setUserInput({
         name: "",
         email: "",
         message: "",
       });
     } catch (error) {
-      toast.error("message sending failed! try again", { id: loadingMessage });
+      console.error("Error sending message:", error);
+      toast.error(error?.response?.data?.message || "Message sending failed! Try again.", { id: loadingMessage });
     } finally {
       setIsLoading(false);
     }
@@ -58,12 +59,12 @@ export default function Contact() {
           onSubmit={onFormSubmit}
           autoComplete="off"
           noValidate
-          className="flex flex-col dark:bg-base-100 gap-4 rounded-lg md:py-5 py-7 md:px-7 px-3 md:w-[500px] w-full shadow-custom dark:shadow-xl  "
+          className="flex flex-col dark:bg-base-100 gap-4 rounded-lg md:py-5 py-7 md:px-7 px-3 md:w-[500px] w-full shadow-custom dark:shadow-xl"
         >
           <h1 className="text-center dark:text-purple-500 text-4xl font-bold font-inter">
             Contact Form
           </h1>
-          {/* name */}
+          {/* Name */}
           <InputBox
             label={"Name"}
             name={"name"}
@@ -72,7 +73,7 @@ export default function Contact() {
             onChange={handleInputChange}
             value={userInput.name}
           />
-          {/* email */}
+          {/* Email */}
           <InputBox
             label={"Email"}
             name={"email"}
@@ -81,22 +82,22 @@ export default function Contact() {
             onChange={handleInputChange}
             value={userInput.email}
           />
-          {/* message */}
+          {/* Message */}
           <TextArea
             label={"Message"}
             name={"message"}
             rows={4}
-            placeholder={"Enter here message..."}
+            placeholder={"Enter your message..."}
             onChange={handleInputChange}
             value={userInput.message}
           />
-          {/* submit btn */}
+          {/* Submit Button */}
           <button
             type="submit"
             disabled={isLoading}
-            className="mt-2 bg-yellow-500 text-white dark:text-base-200  transition-all ease-in-out duration-300 rounded-md py-2 font-nunito-sans font-[500]  text-lg cursor-pointer"
+            className="mt-2 bg-yellow-500 text-white dark:text-base-200 transition-all ease-in-out duration-300 rounded-md py-2 font-nunito-sans font-[500] text-lg cursor-pointer"
           >
-            {isLoading ? "Submiting Form..." : "Submit Form"}
+            {isLoading ? "Submitting..." : "Submit Form"}
           </button>
         </form>
       </section>
