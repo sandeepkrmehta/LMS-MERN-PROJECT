@@ -1,11 +1,12 @@
-import AppError from "../utils/error.utils.js";
 import jwt from "jsonwebtoken";
+import AppError from "../utils/error.utils.js";
 import userModel from '../models/user.model.js';
 
 const isLoggedIn = async (req, res, next) => {
     const { token } = req.cookies;
 
     if (!token) {
+        console.log("No token found in cookies");
         return next(new AppError("Unauthenticated, please login again", 400));
     }
 
@@ -14,6 +15,7 @@ const isLoggedIn = async (req, res, next) => {
         req.user = userDetails;
         next();
     } catch (error) {
+        console.log("Token verification failed: ", error);
         return next(new AppError("Invalid or expired token, please login again", 401));
     }
 }
