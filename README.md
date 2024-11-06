@@ -155,7 +155,7 @@ Follow these steps to set up the project on your local machine:
 
 1. Clone the repository:
    ```
-   git clone https://github.com/gulshan07dev/lms-mern-project.git
+   git clone [https://github.com/sandeepkrmehta/LMS-MERN-PROJECT]
    cd LMS
    ```
 
