@@ -12,7 +12,10 @@ The project follows a well-organized structure:
 
 ```
 LMS-Project/
-├── backend/
+├── backend/ 
+│   ├── templates/
+│   │   ├── emailTemplateAdmin.hbs
+│   │   ├── emailTemplateCustomer.hbs
 │   ├── config/
 │   │   ├── db.config.js 
 │   ├── controllers/
