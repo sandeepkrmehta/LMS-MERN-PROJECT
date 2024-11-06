@@ -35,7 +35,7 @@ export default function Login() {
     const Data = { email: loginData.email, password: loginData.password };
 
     // dispatch create account action
-    const response = await dispatch(login(Data));
+    const response = dispatch(login(Data));
     if (response?.payload?.success) {
       setLoginData({
         email: "",
