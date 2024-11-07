@@ -7,31 +7,28 @@ import cloudinary from 'cloudinary';
 import AppError from "../utils/error.utils.js";
 import sendEmail from "../utils/sendEmail.js";
 
+// Cookie options
 const cookieOptions = {
     httpOnly: true,
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    secure: true, 
-    sameSite: 'none'
-}
+    secure: process.env.NODE_ENV === 'production', // Only true for production (HTTPS)
+    sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax' // Cross-site cookie behavior
+};
 
-
-// Register  
+// Register
 const register = async (req, res, next) => {
     try {
         const { fullName, email, password } = req.body;
 
-        // Check if user misses any fields
         if (!fullName || !email || !password) {
             return next(new AppError("All fields are required", 400));
         }
 
-        // Check if the user already exists
         const userExist = await userModel.findOne({ email });
         if (userExist) {
             return next(new AppError("Email already exists, please login", 400));
         }
 
-        // Save user in the database and log the user in
         const user = await userModel.create({
             fullName,
             email,
@@ -42,11 +39,6 @@ const register = async (req, res, next) => {
             },
         });
 
-        if (!user) {
-            return next(new AppError("User registration failed, please try again", 400));
-        }
-
-        // File upload
         if (req.file) {
             try {
                 const result = await cloudinary.v2.uploader.upload(req.file.path, {
@@ -56,14 +48,9 @@ const register = async (req, res, next) => {
                     gravity: "faces",
                     crop: "fill",
                 });
-
-                if (result) {
-                    user.avatar.public_id = result.public_id;
-                    user.avatar.secure_url = result.secure_url;
-
-                    // Remove the file from the server
-                    fs.rmSync(`uploads/${req.file.filename}`);
-                }
+                user.avatar.public_id = result.public_id;
+                user.avatar.secure_url = result.secure_url;
+                fs.rmSync(`uploads/${req.file.filename}`);
             } catch (e) {
                 return next(new AppError(e.message || "File not uploaded, please try again", 500));
             }
@@ -71,10 +58,7 @@ const register = async (req, res, next) => {
 
         await user.save();
 
-        user.password = undefined;
-
         const token = await user.generateJWTToken();
-
         res.cookie("token", token, cookieOptions);
 
         res.status(201).json({
@@ -87,63 +71,54 @@ const register = async (req, res, next) => {
     }
 };
 
-
-
-// login
+// Login
 const login = async (req, res, next) => {
     try {
         const { email, password } = req.body;
 
-        // check if user miss any field
         if (!email || !password) {
-            return next(new AppError('All fields are required', 400))
+            return next(new AppError('All fields are required', 400));
         }
 
         const user = await userModel.findOne({ email }).select('+password');
-
         if (!user || !(bcrypt.compareSync(password, user.password))) {
-            return next(new AppError('Email or Password does not match', 400))
+            return next(new AppError('Email or Password does not match', 400));
         }
 
         const token = await user.generateJWTToken();
-
-        user.password = undefined;
-
-        res.cookie('token', token, cookieOptions)
+        res.cookie('token', token, cookieOptions);
 
         res.status(200).json({
             success: true,
-            message: 'User loggedin successfully',
+            message: 'User logged in successfully',
             user,
-        })
+        });
     } catch (e) {
-        return next(new AppError(e.message, 500))
+        return next(new AppError(e.message, 500));
     }
-}
+};
 
-
-// logout
+// Logout
 const logout = async (req, res, next) => {
     try {
         res.cookie('token', null, {
-            secure: true,
+            secure: process.env.NODE_ENV === 'production',
             maxAge: 0,
-            httpOnly: true
-        })
+            httpOnly: true,
+            sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax'
+        });
 
         res.status(200).json({
             success: true,
-            message: 'User loggedout successfully'
-        })
+            message: 'User logged out successfully'
+        });
+    } catch (e) {
+        return next(new AppError(e.message, 500));
     }
-    catch (e) {
-        return next(new AppError(e.message, 500))
-    }
-}
+};
 
-
-// getProfile
-const getProfile = async (req, res) => {
+// Get Profile
+const getProfile = async (req, res, next) => {
     try {
         const { id } = req.user;
         const user = await userModel.findById(id);
@@ -152,38 +127,34 @@ const getProfile = async (req, res) => {
             success: true,
             message: 'User details',
             user
-        })
+        });
     } catch (e) {
-        return next(new AppError('Failed to fetch user profile', 500))
+        return next(new AppError('Failed to fetch user profile', 500));
     }
-}
+};
 
-// forgot password
+// Forgot Password
 const forgotPassword = async (req, res, next) => {
     const { email } = req.body;
-    // check if user does'nt pass email
+
     if (!email) {
-        return next(new AppError('Email is required', 400))
+        return next(new AppError('Email is required', 400));
     }
 
     const user = await userModel.findOne({ email });
-    // check if user not registered with the email
     if (!user) {
-        return next(new AppError('Email not registered', 400))
+        return next(new AppError('Email not registered', 400));
     }
 
     const resetToken = await user.generatePasswordResetToken();
-
     await user.save();
 
-    const resetPasswordURL = `${process.env.CLIENT_URL}/user/profile/reset-password/${resetToken}`
-
+    const resetPasswordURL = `${process.env.CLIENT_URL}/user/profile/reset-password/${resetToken}`;
     const subject = 'Reset Password';
-    const message = `You can reset your password by clicking ${resetPasswordURL} Reset your password</$>\nIf the above link does not work for some reason then copy paste this link in new tab ${resetPasswordURL}.\n If you have not requested this, kindly ignore.`;
+    const message = `Reset password here: ${resetPasswordURL}. If not requested, ignore this email.`;
 
     try {
         await sendEmail(email, subject, message);
-
         res.status(200).json({
             success: true,
             message: `Reset password token has been sent to ${email}`,
@@ -194,16 +165,13 @@ const forgotPassword = async (req, res, next) => {
         await user.save();
         return next(new AppError(e.message, 500));
     }
+};
 
-}
-
-
-// reset password
+// Reset Password
 const resetPassword = async (req, res, next) => {
     try {
         const { resetToken } = req.params;
-
-        const { password } = req.body; 
+        const { password } = req.body;
 
         const forgotPasswordToken = crypto
             .createHash('sha256')
@@ -213,7 +181,7 @@ const resetPassword = async (req, res, next) => {
         const user = await userModel.findOne({
             forgotPasswordToken,
             forgotPasswordExpiry: { $gt: Date.now() }
-        })
+        });
 
         if (!user) {
             return next(new AppError("Token is invalid or expired, please try again", 400));
@@ -228,24 +196,23 @@ const resetPassword = async (req, res, next) => {
         res.status(200).json({
             success: true,
             message: "Password changed successfully"
-        })
+        });
     } catch (e) {
-        return next(new AppError(e.message, 500))
+        return next(new AppError(e.message, 500));
     }
-}
+};
 
-// change password
+// Change Password
 const changePassword = async (req, res, next) => {
     try {
         const { oldPassword, newPassword } = req.body;
         const { id } = req.user;
 
         if (!oldPassword || !newPassword) {
-            return next(new AppError("All fields are requared", 400));
+            return next(new AppError("All fields are required", 400));
         }
 
         const user = await userModel.findById(id).select('+password');
-
         if (!user) {
             return next(new AppError("User does not exist", 400));
         }
@@ -255,73 +222,58 @@ const changePassword = async (req, res, next) => {
         }
 
         user.password = newPassword;
-
         await user.save();
 
         res.status(200).json({
             success: true,
             message: "Password changed successfully"
-        })
+        });
     } catch (e) {
-        return next(new AppError(e.message, 500))
+        return next(new AppError(e.message, 500));
     }
+};
 
-}
-
-// update profile
+// Update Profile
 const updateUser = async (req, res, next) => {
     try {
         const { fullName } = req.body;
         const { id } = req.user;
 
-        console.log(fullName);
-
         const user = await userModel.findById(id);
-
         if (!user) {
-            return next(new AppError("user does not exist", 400));
+            return next(new AppError("User does not exist", 400));
         }
 
         if (fullName) {
-            user.fullName = fullName
+            user.fullName = fullName;
         }
 
         if (req.file) {
             await cloudinary.v2.uploader.destroy(user.avatar.public_id);
 
-            try {
-                const result = await cloudinary.v2.uploader.upload(req.file.path, {
-                    folder: 'Learning-Management-System',
-                    width: 250,
-                    height: 250,
-                    gravity: 'faces',
-                    crop: 'fill'
-                })
-
-                if (result) {
-                    user.avatar.public_id = result.public_id;
-                    user.avatar.secure_url = result.secure_url;
-
-                    // Remove file from server
-                    fs.rmSync(`uploads/${req.file.filename}`);
-
-                }
-            } catch (e) {
-                return next(new AppError(e.message || 'File not uploaded, please try again', 500))
-            }
+            const result = await cloudinary.v2.uploader.upload(req.file.path, {
+                folder: 'Learning-Management-System',
+                width: 250,
+                height: 250,
+                gravity: 'faces',
+                crop: 'fill'
+            });
+            user.avatar.public_id = result.public_id;
+            user.avatar.secure_url = result.secure_url;
+            fs.rmSync(`uploads/${req.file.filename}`);
         }
 
         await user.save();
 
         res.status(200).json({
             success: true,
-            message: "User update successfully",
+            message: "User updated successfully",
             user
-        })
+        });
     } catch (e) {
-        return next(new AppError(e.message, 500))
+        return next(new AppError(e.message, 500));
     }
-}
+};
 
 export {
     register,
@@ -332,4 +284,4 @@ export {
     resetPassword,
     changePassword,
     updateUser
-}
+};
