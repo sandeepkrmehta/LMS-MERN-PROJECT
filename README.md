@@ -2,7 +2,7 @@
 
 ## Description
 
-this is a lms project, that i have build while learning full stack development with my mentor. in this project i have build from scratch lots of feature like authentication, user management, course management, lecture management, lecture dashboard & admin dashboard and more...
+This is a lms project, that i have build while learning full stack development with my mentor. in this project i have build from scratch lots of feature like authentication, user management, course management, lecture management, lecture dashboard & admin dashboard and more...
 
 ![LMS](https://res.cloudinary.com/dhwbyshmo/image/upload/v1695283699/project%20images/lms-home.png)
 
@@ -12,10 +12,7 @@ The project follows a well-organized structure:
 
 ```
 LMS-Project/
-├── backend/ 
-│   ├── templates/
-│   │   ├── emailTemplateAdmin.hbs
-│   │   ├── emailTemplateCustomer.hbs
+├── backend/
 │   ├── config/
 │   │   ├── db.config.js 
 │   ├── controllers/
