@@ -1,7 +1,8 @@
 /* eslint-disable-next-line no-unused-vars */
-import React, { Suspense, lazy } from "react";
-import { Routes, Route } from "react-router-dom";
+import React, { Suspense, lazy, useEffect } from "react";
+import { Routes, Route, useNavigate } from "react-router-dom";
 
+// Lazy loading pages
 const HomePage = lazy(() => import("./Pages/HomePage"));
 const AboutUs = lazy(() => import("./Pages/About"));
 const NotFound = lazy(() => import("./Pages/NotFound"));
@@ -24,7 +25,39 @@ const DisplayLecture = lazy(() => import("./Pages/Dashboard/DisplayLecture"));
 const AddLecture = lazy(() => import("./Pages/Dashboard/AddLecture"));
 const AdminDashboard = lazy(() => import("./Pages/Dashboard/AdminDashboard"));
 
+// Helper functions for session management
+function checkSessionExpiration() {
+  const expiresAt = localStorage.getItem("expiresAt");
+  if (expiresAt && Date.now() > parseInt(expiresAt, 10)) {
+    localStorage.removeItem("token");
+    localStorage.removeItem("expiresAt");
+    return true;
+  }
+  return false;
+}
+
+function startSessionTimer() {
+  localStorage.setItem("expiresAt", Date.now() + 3600000); // 1 hour
+}
+
 function App() {
+  const navigate = useNavigate();
+
+  // Automatically check session expiration and navigate to login if expired
+  useEffect(() => {
+    if (checkSessionExpiration()) {
+      navigate("/login"); // Redirect to login if session expired
+    }
+
+    const interval = setInterval(() => {
+      if (checkSessionExpiration()) {
+        navigate("/login");
+      }
+    }, 60000); // Check every minute
+
+    return () => clearInterval(interval);
+  }, [navigate]);
+
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <Routes>

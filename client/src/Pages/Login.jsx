@@ -35,15 +35,24 @@ export default function Login() {
     const Data = { email: loginData.email, password: loginData.password };
 
     // dispatch create account action
-    const response = dispatch(login(Data));
-    if (response?.payload?.success) {
-      setLoginData({
-        email: "",
-        password: "",
+    try {
+      const response =await dispatch(login(Data));
+      if (response?.payload?.success) {
+        setLoginData({
+          email: "",
+          password: "",
       });
       navigate("/");
     }
-    setIsLoading(false);
+      else{
+      toast.error(response?.payload?.message || "Login failed");
+    }
+    } catch (error) {
+      toast.error("An error occurred during login");
+    }
+      finally{
+      setIsLoading(false); //stop loading after the process is done
+    }
   }
 
   return (
