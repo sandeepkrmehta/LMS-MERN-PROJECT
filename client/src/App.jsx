@@ -46,11 +46,13 @@ function App() {
   // Automatically check session expiration and navigate to login if expired
   useEffect(() => {
     if (checkSessionExpiration()) {
+      alert("Your session has expired. Please log in again.");
       navigate("/login"); // Redirect to login if session expired
     }
 
     const interval = setInterval(() => {
       if (checkSessionExpiration()) {
+        alert("Your session has expired. Please log in again.");
         navigate("/login");
       }
     }, 60000); // Check every minute
@@ -72,7 +74,7 @@ function App() {
         <Route path="/user/profile/reset-password/:resetToken" element={<ResetPassword />} />
 
         <Route path="/courses" element={<CourseList />} />
-        <Route path="/courses/description" element={<CourseDescription />} />
+        <Route path="/courses/description/:courseId" element={<CourseDescription />} />
 
         <Route element={<RequireAuth allowedRoles={["ADMIN"]} />}>
           <Route path="/course/create" element={<CreateCourse />} />
