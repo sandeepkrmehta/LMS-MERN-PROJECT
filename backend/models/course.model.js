@@ -13,7 +13,7 @@ const courseSchema = new Schema({
         type: String,
         required: true,
         minLength: [8, 'Description must be at least 8 character'],
-        maxLength: [5000, 'Description should be less than 500 character'],
+        maxLength: [1000, 'Description should be less than 500 character'],
     },
     category: {
         type: String,

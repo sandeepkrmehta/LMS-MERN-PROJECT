@@ -21,29 +21,31 @@ export default function CreateCourse() {
     previewImage: "",
   });
 
-  const handleImageUpload = (e) => {
+  function handleImageUpload(e) {
+    e.preventDefault();
     const uploadImage = e.target.files[0];
-    if (uploadImage && ["image/jpeg", "image/jpg", "image/png"].includes(uploadImage.type)) {
+    if (uploadImage) {
       const fileReader = new FileReader();
-      fileReader.onload = () => {
+      fileReader.readAsDataURL(uploadImage);
+      fileReader.addEventListener("load", function () {
         setUserInput({
           ...userInput,
-          previewImage: fileReader.result,
+          previewImage: this.result,
           thumbnail: uploadImage,
         });
-      };
-      fileReader.readAsDataURL(uploadImage);
-    } else {
-      toast.error("Please upload a valid JPG or PNG image.");
+      });
     }
-  };
+  }
 
-  const handleUserInput = (e) => {
+  function handleUserInput(e) {
     const { name, value } = e.target;
-    setUserInput((prev) => ({ ...prev, [name]: value }));
-  };
+    setUserInput({
+      ...userInput,
+      [name]: value,
+    });
+  }
 
-  const onFormSubmit = async (e) => {
+  async function onFormSubmit(e) {
     e.preventDefault();
 
     if (
@@ -53,7 +55,7 @@ export default function CreateCourse() {
       !userInput.createdBy ||
       !userInput.thumbnail
     ) {
-      toast.error("All fields are required!");
+      toast.error("All field are required!");
       return;
     }
 
@@ -65,28 +67,19 @@ export default function CreateCourse() {
     formData.append("createdBy", userInput.createdBy);
     formData.append("thumbnail", userInput.thumbnail);
 
-    try {
-      const response = await dispatch(createNewCourse(formData));
-      if (response?.payload?.success) {
-        toast.success("Course created successfully!");
-        setUserInput({
-          title: "",
-          category: "",
-          createdBy: "",
-          description: "",
-          thumbnail: null,
-          previewImage: "",
-        });
-        navigate("/courses"); // Navigate to courses list or desired page
-      } else {
-        toast.error("Failed to create course.");
-      }
-    } catch (error) {
-      toast.error("An error occurred. Please try again.");
-    } finally {
-      setIsCreatingCourse(false);
+    const response = await dispatch(createNewCourse(formData));
+    if (response?.payload?.success) {
+      setUserInput({
+        title: "",
+        category: "",
+        createdBy: "",
+        description: "",
+        thumbnail: null,
+        previewImage: "",
+      });
     }
-  };
+    setIsCreatingCourse(false);
+  }
 
   return (
     <Layout>
@@ -95,21 +88,26 @@ export default function CreateCourse() {
           onSubmit={onFormSubmit}
           autoComplete="off"
           noValidate
-          className="flex flex-col dark:bg-base-100 gap-7 rounded-lg md:py-5 py-7 md:px-7 px-3 md:w-[750px] w-full shadow-custom dark:shadow-xl"
+          className="flex flex-col dark:bg-base-100 gap-7 rounded-lg md:py-5 py-7 md:px-7 px-3 md:w-[750px] w-full shadow-custom dark:shadow-xl  "
         >
           <h1 className="text-center dark:text-purple-500 text-4xl font-bold font-inter">
             Create New Course
           </h1>
           <div className="w-full flex md:flex-row md:justify-between justify-center flex-col md:gap-0 gap-5">
             <div className="md:w-[48%] w-full flex flex-col gap-5">
-              {/* Thumbnail */}
+              {/* thumbnail */}
               <div className="border border-gray-300">
                 <label htmlFor="image_uploads" className="cursor-pointer">
                   {userInput.previewImage ? (
-                    <img className="w-full h-44 m-auto" src={userInput.previewImage} alt="Course Thumbnail" />
+                    <img
+                      className="w-full h-44 m-auto"
+                      src={userInput.previewImage}
+                    />
                   ) : (
                     <div className="w-full h-44 m-auto flex items-center justify-center">
-                      <h1 className="font-bold text-lg">Upload your course thumbnail</h1>
+                      <h1 className="font-bold text-lg">
+                        Upload your course thumbnail
+                      </h1>
                     </div>
                   )}
                 </label>
@@ -122,51 +120,53 @@ export default function CreateCourse() {
                   onChange={handleImageUpload}
                 />
               </div>
-              {/* Title */}
+              {/* title */}
               <InputBox
-                label="Title"
-                name="title"
-                type="text"
-                placeholder="Enter Course Title"
+                label={"Title"}
+                name={"title"}
+                type={"text"}
+                placeholder={"Enter Course Title"}
                 onChange={handleUserInput}
                 value={userInput.title}
               />
             </div>
             <div className="md:w-[48%] w-full flex flex-col gap-5">
-              {/* Instructor */}
+              {/* instructor */}
               <InputBox
-                label="Instructor"
-                name="createdBy"
-                type="text"
-                placeholder="Enter Course Instructor"
+                label={"Instructor"}
+                name={"createdBy"}
+                type={"text"}
+                placeholder={"Enter Course instructor"}
                 onChange={handleUserInput}
                 value={userInput.createdBy}
               />
-              {/* Category */}
+              {/* category */}
               <InputBox
-                label="Category"
-                name="category"
-                type="text"
-                placeholder="Enter Course Category"
+                label={"Category"}
+                name={"category"}
+                type={"text"}
+                placeholder={"Enter Course Category"}
                 onChange={handleUserInput}
                 value={userInput.category}
               />
-              {/* Description */}
+              {/* description */}
               <TextArea
-                label="Description"
-                name="description"
+                label={"Description"}
+                name={"description"}
                 rows={3}
-                placeholder="Enter Course Description"
+                type={"text"}
+                placeholder={"Enter Course Description"}
                 onChange={handleUserInput}
                 value={userInput.description}
               />
             </div>
           </div>
-          {/* Submit Button */}
+
+          {/* submit btn */}
           <button
             type="submit"
             disabled={isCreatingCourse}
-            className={`mt-3 ${isCreatingCourse ? "bg-gray-400" : "bg-yellow-500"} text-white dark:text-base-200 transition-all duration-300 rounded-md py-2 font-nunito-sans font-[500] text-lg cursor-pointer`}
+            className="mt-3 bg-yellow-500 text-white dark:text-base-200  transition-all ease-in-out duration-300 rounded-md py-2 font-nunito-sans font-[500]  text-lg cursor-pointer"
           >
             {isCreatingCourse ? "Creating Course..." : "Create Course"}
           </button>

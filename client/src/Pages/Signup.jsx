@@ -7,16 +7,12 @@ import Layout from "../Layout/Layout";
 import { createAccount } from "../Redux/Slices/AuthSlice";
 import InputBox from "../Components/InputBox/InputBox";
 
-// Helper function to start session timer
-function startSessionTimer() {
-  localStorage.setItem("expiresAt", Date.now() + 3600000); // 1 hour
-}
-
 export default function Signup() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const [previewImage, setPreviewImage] = useState("");
+
   const [isLoading, setIsLoading] = useState(false);
   const [signupData, setSignupData] = useState({
     fullName: "",
@@ -35,6 +31,7 @@ export default function Signup() {
 
   function getImage(event) {
     event.preventDefault();
+    // getting the image
     const uploadedImage = event.target.files[0];
 
     if (uploadedImage) {
@@ -57,11 +54,12 @@ export default function Signup() {
       return;
     }
 
+    // checking name field length
     if (signupData.fullName.length < 3) {
-      toast.error("Name should be at least 3 characters");
+      toast.error("Name should be atleast of 3 characters");
       return;
     }
-
+    // checking valid email
     if (!signupData.email.match(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g)) {
       toast.error("Invalid email id");
       return;
@@ -73,10 +71,9 @@ export default function Signup() {
     formData.append("password", signupData.password);
     formData.append("avatar", signupData.avatar);
 
-    // Dispatch create account action
+    // dispatch create account action
     const response = await dispatch(createAccount(formData));
     if (response?.payload?.success) {
-      startSessionTimer(); // Start session timer after successful signup
       setSignupData({
         fullName: "",
         email: "",
@@ -84,7 +81,8 @@ export default function Signup() {
         avatar: "",
       });
       setPreviewImage("");
-      navigate("/"); // Redirect to homepage
+
+      navigate("/");
     }
   }
 
@@ -95,7 +93,7 @@ export default function Signup() {
           onSubmit={createNewAccount}
           autoComplete="off"
           noValidate
-          className="flex flex-col dark:bg-base-100 gap-4 rounded-lg md:py-5 py-7 md:px-7 px-3 md:w-[500px] w-full shadow-custom dark:shadow-xl"
+          className="flex flex-col dark:bg-base-100 gap-4 rounded-lg md:py-5 py-7 md:px-7 px-3 md:w-[500px] w-full shadow-custom dark:shadow-xl  "
         >
           <h1 className="text-center dark:text-purple-500 text-4xl font-bold font-inter">
             Registration Page
@@ -128,9 +126,9 @@ export default function Signup() {
             value={signupData.password}
           />
           {/* avatar */}
-          <div className="flex flex-col gap-2">
+          <div className=" flex flex-col gap-2  ">
             <label
-              htmlFor="image_uploads"
+              htmlFor="image_uploads "
               className="font-[500] text-xl text-blue-600 dark:text-white font-lato"
             >
               Avatar{" "}
@@ -140,33 +138,39 @@ export default function Signup() {
             </label>
             <div className="flex gap-7 border border-gray-300 px-2 py-2">
               {previewImage ? (
-                <img className="w-14 h-14 object-cover" src={previewImage} alt="User avatar" />
+                <img className="w-10 h-10 rounded-full " src={previewImage} />
               ) : (
-                <BsPersonCircle className="w-14 h-14 text-gray-600" />
+                <BsPersonCircle className="w-10 h-10 rounded-full " />
               )}
               <input
-                id="image_uploads"
-                type="file"
-                name="avatar"
-                accept="image/png, image/jpg, image/jpeg"
                 onChange={getImage}
+                className=" "
+                type="file"
+                name="image_uploads"
+                id="image_uploads"
+                accept=".jpg, .jpeg, .png, image/*"
               />
             </div>
           </div>
-          {/* create account */}
+
+          {/* submit btn */}
           <button
             type="submit"
-            className="dark:bg-purple-500 text-white dark:hover:bg-purple-700 md:py-3 py-2 rounded-lg text-lg font-[600]"
+            disabled={isLoading}
+            className="mt-2 bg-yellow-500 text-white dark:text-base-200 hover:bg-yellow-300 transition-all ease-in-out duration-300 rounded-md py-2 font-nunito-sans font-[500]  text-lg cursor-pointer"
           >
-            {isLoading ? "Creating Account..." : "Create Account"}
+            {isLoading ? "Creating account" : "Create account"}
           </button>
-          <p className="font-lato font-[500] text-base text-center dark:text-white">
-            Already have an account?{" "}
+
+          {/* link */}
+          <p className="text-center font-inter text-gray-500 dark:text-slate-300">
+            Already have an account ?{" "}
             <Link
-              to={"/login"}
-              className="text-blue-600 font-[600] hover:underline underline-offset-1"
+              to="/login"
+              className="link text-blue-600 font-lato cursor-pointer"
             >
-              Login now
+              {" "}
+              Login
             </Link>
           </p>
         </form>
