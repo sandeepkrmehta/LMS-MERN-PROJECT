@@ -20,7 +20,7 @@ app.use(cookieParser());
 app.use(morgan('dev'));
 
 // CORS - dynamic based on environment
-const allowedOrigin = process.env.CLIENT_URL || 'http://localhost:3000';
+const allowedOrigin = process.env.CLIENT_URL;
 app.use(cors({ 
     origin: allowedOrigin, 
     credentials: true 
