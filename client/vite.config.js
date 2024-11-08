@@ -7,8 +7,8 @@ export default defineConfig({
     hmr: {
       overlay: false,
     },
-    port: process.env.PORT || 3000, // Use environment variable PORT or 3000 as fallback
-    host: '0.0.0.0', // Necessary for external connections
+    port: process.env.PORT, // Use Render's dynamically assigned PORT
+    host: '0.0.0.0', // Allows external connections
   },
   build: {
     chunkSizeWarningLimit: 1000,
