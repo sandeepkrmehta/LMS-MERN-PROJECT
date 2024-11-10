@@ -11,10 +11,9 @@ const courseSchema = new Schema({
     },
     description: {
         type: String,
-        required: true,
-        minLength: [8, 'Description must be at least 8 character'],
-        maxLength: [1000, 'Description should be less than 500 character'],
-    },
+        required: [true, 'Course description is required'],
+        maxlength: [1000, 'Description should be less than 1000 characters'], // Add this validation
+      },
     category: {
         type: String,
         required: [true, 'Category is required'],
