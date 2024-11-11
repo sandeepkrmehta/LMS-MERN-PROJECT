@@ -81,6 +81,4 @@ userSchema.methods = {
     }
 
 }
-
-
 export default model("User", userSchema);
